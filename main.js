@@ -10,7 +10,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
-app.post('/extract-text', async (req, res) => {
+app.post('/itau-extract-text', async (req, res) => {
     const { filePath } = req.body;
 
     if (!filePath) {
