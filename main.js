@@ -34,17 +34,17 @@ app.post('/itau-extract-text', async (req, res) => {
                 const match = line.match(linePattern);
                 if (match) {
                     // Extração e normalização do valor
-                    let value = match[2].trim();
-                    value = value.replace('.', '').replace(',', '.');
-                    value = parseFloat(value);
+                    let valor = match[2].trim();
+                    valor = valor.replace('.', '').replace(',', '.');
+                    valor = parseFloat(valor);
     
                     // Obter a descrição usando a parte restante da linha
-                    const description = line.substring(match[0].indexOf(match[1]) + match[1].length, line.indexOf(match[2])).trim();
+                    const descricao = line.substring(match[0].indexOf(match[1]) + match[1].length, line.indexOf(match[2])).trim();
     
                     return {
-                        date: match[1],
-                        description: description,
-                        value: value
+                        data: match[1],
+                        descricao: descricao,
+                        valor: valor
                     };
                 }
                 return null;
@@ -72,7 +72,7 @@ app.post('/caixa-extract-text', async (req, res) => {
         const data = await pdf(dataBuffer);
 
         const datePattern = /^\d{2}\/\d{2}\/\d{4}/;
-        // Regex ajustado para capturar a data, histórico, valor numérico e permitir descrição no meio
+        // Regex ajustado para capturar a data, histórico, valor numérico, saldo numérico e natureza saldo
         const linePattern = /^(\d{2}\/\d{2}\/\d{4})(\d+)([\s\S]*?)(\d{1,3}(?:\.\d{3})*,\d{2})([\s\S]*?)(\d{1,3}(?:\.\d{3})*,\d{2})([\s\S]*?)(.*)$/;
 
         console.log(data.text);
@@ -99,9 +99,9 @@ app.post('/caixa-extract-text', async (req, res) => {
                     
                     return {
                         data: match[1],
-                        Historico: historico,
-                        Valor: valor,
-                        Saldo: parseFloat(saldo),
+                        historico: historico,
+                        valoralor: valor,
+                        saldo: parseFloat(saldo),
                         naturesaSaldo: naturesaSaldo,
                     };
                 }
