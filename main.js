@@ -58,6 +58,64 @@ app.post('/itau-extract-text', async (req, res) => {
     }
 });
 
+app.post('/caixa-extract-text', async (req, res) => {
+    const { filePath } = req.body;
+
+    if (!filePath) {
+        return res.status(400).json({ error: 'Caminho do arquivo é necessário' });
+    }
+
+    const fullPath = path.resolve(filePath);
+
+    try {
+        const dataBuffer = fs.readFileSync(fullPath);
+        const data = await pdf(dataBuffer);
+
+        const datePattern = /^\d{2}\/\d{2}\/\d{4}/;
+        // Regex ajustado para capturar a data, histórico, valor numérico e permitir descrição no meio
+        const linePattern = /^(\d{2}\/\d{2}\/\d{4})(\d+)([\s\S]*?)(\d{1,3}(?:\.\d{3})*,\d{2})([\s\S]*?)(\d{1,3}(?:\.\d{3})*,\d{2})([\s\S]*?)(.*)$/;
+
+        console.log(data.text);
+
+        const filteredLines = data.text
+            .split('\n')
+            .filter(line => datePattern.test(line))
+            .map(line => {
+                const match = line.match(linePattern);
+                if (match) {
+                    // Extração e normalização do valor
+                    let valor = match[4].trim();
+                    valor = valor.replace('.', '').replace(',', '.');
+                    valor = parseFloat(valor);
+                    
+                    // Extração da descrição
+                    const naturesaSaldo = match[8].trim();
+                    
+                    // Obter o valor final
+                    const saldo = match[6].trim().replace('.', '').replace(',', '.');
+                    
+                    // Extração do histórico
+                    const historico = match[2].trim();
+                    
+                    return {
+                        data: match[1],
+                        Historico: historico,
+                        Valor: valor,
+                        Saldo: parseFloat(saldo),
+                        naturesaSaldo: naturesaSaldo,
+                    };
+                }
+                return null;
+            })
+            .filter(line => line !== null);
+
+        res.json({ text: filteredLines });
+    } catch (error) {
+        console.error('Erro ao extrair texto:', error);
+        res.status(500).json({ error: 'Erro ao extrair texto' });
+    }
+});
+
 app.listen(port, () => {
     console.log(`Servidor rodando em http://localhost:${port}`);
 });
