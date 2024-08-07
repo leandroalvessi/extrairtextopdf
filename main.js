@@ -1,50 +1,43 @@
 const express = require('express');
+const multer = require('multer');
 const fs = require('fs');
 const pdf = require('pdf-parse');
 const path = require('path');
 
 const app = express();
+const upload = multer({ dest: 'uploads/' });
 const port = 3000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
-app.post('/itau-extract-text', async (req, res) => {
-    const { filePath } = req.body;
-
-    if (!filePath) {
-        return res.status(400).json({ error: 'Caminho do arquivo é necessário' });
+app.post('/itau-extract-text', upload.single('file'), async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ error: 'Arquivo é necessário' });
     }
 
-    const fullPath = path.resolve(filePath);
+    const fullPath = path.resolve(req.file.path);
 
     try {
-        if (!fs.existsSync(fullPath)) {
-            return res.status(404).json({ error: 'Arquivo não encontrado' });
-        }
-
         const dataBuffer = fs.readFileSync(fullPath);
         const data = await pdf(dataBuffer);
-    
+
         const datePattern = /^\d{2}\/\d{2}\/\d{4}/;
-        // Regex ajustado para capturar a data, valor numérico e permitir descrição no meio
         const linePattern = /^(\d{2}\/\d{2}\/\d{2,4})[\s\S]*?([-]?\d{1,3}(?:\.\d{3})*,\d{2})$/;
-    
+
         const filteredLines = data.text
             .split('\n')
             .filter(line => datePattern.test(line))
             .map(line => {
                 const match = line.match(linePattern);
                 if (match) {
-                    // Extração e normalização do valor
                     let valor = match[2].trim();
                     valor = valor.replace('.', '').replace(',', '.');
                     valor = parseFloat(valor);
-    
-                    // Obter a descrição usando a parte restante da linha
+
                     const descricao = line.substring(match[0].indexOf(match[1]) + match[1].length, line.indexOf(match[2])).trim();
-    
+
                     return {
                         data: match[1],
                         descricao: descricao,
@@ -54,28 +47,25 @@ app.post('/itau-extract-text', async (req, res) => {
                 return null;
             })
             .filter(line => line !== null);
-    
+
         res.json({ text: filteredLines });
     } catch (error) {
         console.error('Erro ao extrair texto:', error);
         res.status(500).json({ error: 'Erro ao extrair texto' });
+    } finally {
+        // Remove o arquivo após processamento para economizar espaço em disco
+        fs.unlinkSync(fullPath);
     }
 });
 
-app.post('/caixa-extract-text', async (req, res) => {
-    const { filePath } = req.body;
-
-    if (!filePath) {
-        return res.status(400).json({ error: 'Caminho do arquivo é necessário' });
+app.post('/caixa-extract-text', upload.single('file'), async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ error: 'Arquivo é necessário' });
     }
 
-    const fullPath = path.resolve(filePath);
+    const fullPath = path.resolve(req.file.path);
 
     try {
-        if (!fs.existsSync(fullPath)) {
-            return res.status(404).json({ error: 'Arquivo não encontrado' });
-        }
-
         const dataBuffer = fs.readFileSync(fullPath);
         const data = await pdf(dataBuffer);
 
@@ -124,6 +114,9 @@ app.post('/caixa-extract-text', async (req, res) => {
     } catch (error) {
         console.error('Erro ao extrair texto:', error);
         res.status(500).json({ error: 'Erro ao extrair texto' });
+    } finally {
+        // Remove o arquivo após processamento para economizar espaço em disco
+        fs.unlinkSync(fullPath);
     }
 });
 
