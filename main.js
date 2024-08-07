@@ -20,6 +20,10 @@ app.post('/itau-extract-text', async (req, res) => {
     const fullPath = path.resolve(filePath);
 
     try {
+        if (!fs.existsSync(fullPath)) {
+            return res.status(404).json({ error: 'Arquivo não encontrado' });
+        }
+        
         const dataBuffer = fs.readFileSync(fullPath);
         const data = await pdf(dataBuffer);
     
@@ -68,6 +72,10 @@ app.post('/caixa-extract-text', async (req, res) => {
     const fullPath = path.resolve(filePath);
 
     try {
+        if (!fs.existsSync(fullPath)) {
+            return res.status(404).json({ error: 'Arquivo não encontrado' });
+        }
+
         const dataBuffer = fs.readFileSync(fullPath);
         const data = await pdf(dataBuffer);
 
@@ -79,7 +87,7 @@ app.post('/caixa-extract-text', async (req, res) => {
             .split('\n')
             .filter(line => datePattern.test(line))
             .map(line => {
-               // console.log("Linha original:", line);
+                console.log("Linha original:", line);
                 const match = line.match(linePattern);
                 if (match) {
                     //console.log("Capturas regex:", match);
