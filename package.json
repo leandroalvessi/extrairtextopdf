@@ -1,7 +1,22 @@
 {
+  "name": "extrairtextopdf",
+  "version": "1.0.0",
+  "description": "Aplicação para extrair texto de PDFs",
+  "main": "main.js",
+  "bin": "main.js",
+  "scripts": {
+    "start": "node main.js"
+  },
   "dependencies": {
     "express": "^4.19.2",
     "multer": "^1.4.5-lts.1",
     "pdf-parse": "^1.1.1"
-  }
+  },
+  "pkg": {
+    "assets": [
+      "node_modules/pdf-parse/lib/pdf.js/**/*"
+    ]
+  },
+  "author": "Leandro Alves",
+  "license": "MIT"
 }

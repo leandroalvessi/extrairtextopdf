@@ -139,3 +139,8 @@ app.listen(port, () => {
 // Natureza Valor: C (próximo caractere)
 // Saldo: 138,78 (próximos 6 caracteres, ajustado para ser um número)
 // Natureza Saldo: C (último caractere ou caracteres)
+
+//pkg . --targets node18-win-x64 --output meu-app.exe --assets "node_modules/pdf-parse/lib/pdf.js/**/*"
+
+
+
